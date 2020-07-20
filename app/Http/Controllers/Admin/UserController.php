@@ -5,11 +5,19 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Repositories\UserRepositoryInterface;
 use Datatables;
 use App\User;
 
 class UserController extends Controller
 {
+    private $userRepository;
+
+    public function __construct(UserRepositoryInterface $userRepo)
+    {
+        $this->userRepository = $userRepo;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -17,7 +25,8 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::latest()->paginate(5);
+        $users = $this->userRepository->all();
+        /* $users = $users->paginate(5) */;
         return view('admin.user.index', ['users' => $users])
                 ->with('i', (request()->input('page', 1) - 1) * 5);
     }
@@ -50,8 +59,11 @@ class UserController extends Controller
 
         $input['password'] = Hash::make($input['password']);
 
-        User::create($input);
-   
+        //$user = User::create($input);
+        $user = $this->userRepository->create($input);
+
+        $user->assignRole('SuperAdmin');
+
         return redirect()->route('admin::user.index')
                         ->with('success','User created successfully.');
     }
@@ -64,7 +76,8 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::findOrFail($id);
+        $user = $this->userRepository->find($id);
+        //$user = User::findOrFail($id);
         return view('admin.user.show')->with('user', $user);
     }
 
@@ -76,7 +89,8 @@ class UserController extends Controller
      */
     public function edit($id)
     {
-        $user = User::findOrFail($id);
+        $user = $this->userRepository->find($id);
+        //$user = User::findOrFail($id);
         return view('admin.user.edit')->with('user', $user);
     }
 
@@ -94,8 +108,10 @@ class UserController extends Controller
             'username' => 'required',
         ]);
   
-        $user = User::find($id);
-        $user->fill($request->all())->save();
+        $user = $this->userRepository->update($request->all(), $id);
+
+        /* $user = User::find($id);
+        $user->fill($request->all())->save(); */
   
         return redirect()->route('admin::user.index')
                 ->with('success','User updated successfully.');
@@ -109,8 +125,7 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        $user = User::find($id);
-        $user->delete();
+        $user = $this->userRepository->destroy($id);
         return redirect()->route('admin::user.index')
         ->with('success','User deleted successfully.');
     }

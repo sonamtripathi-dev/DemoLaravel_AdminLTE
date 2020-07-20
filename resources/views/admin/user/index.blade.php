@@ -30,6 +30,7 @@
                 <th>Email</th>
                 <th>Created At</th>
                 <th>Updated At</th>
+                <th colspan='2'>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -43,7 +44,9 @@
                   <td>{{ $user->updated_at }}</td>
                   <td>
                       <a class="fa fa-eye" href="{{ route('admin::user.show',$user->id) }}"></a>
+                      @can('edit user')
                       <a class="fa fa-edit" href="{{ route('admin::user.edit',$user->id) }}"></a>
+                      @endcan
                   </td>
                   <td>
                     <form action="{{ route('admin::user.destroy', $user->id)}}" method="post">
@@ -57,7 +60,6 @@
           </table>
         </div>
         <div class="card-footer">
-          {!! $users->links() !!}
         </div>
       </div>
     </div>
